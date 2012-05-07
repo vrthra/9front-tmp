@@ -51,6 +51,7 @@ int		reverse;
 enum
 {
 	New,
+	Entile,
 	Reshape,
 	Move,
 	Delete,
@@ -87,6 +88,7 @@ int	Hidden = Exit+1;
 
 char		*menu3str[100] = {
  [New]		"New",
+ [Entile]	"EnTile",
  [Reshape]	"Resize",
  [Move]		"Move",
  [Delete]		"Delete",
@@ -668,6 +670,9 @@ button3menu(void)
 	case New:
 		new(sweep(), FALSE, scrolling, 0, nil, "/bin/rc", nil);
 		break;
+	case Entile:
+		entile();
+		break;
 	case Reshape:
 		resize();
 		break;
@@ -1047,6 +1052,21 @@ delete(void)
 	if(w)
 		wsendctlmesg(w, Deleted, ZR, nil);
 }
+
+void
+entile(void)
+{
+	Window *w;
+	Image *i;
+
+	w = pointto(TRUE);
+	if(w == nil)
+		return;
+	i = allocwindow(wscreen, viewr, Refbackup, DWhite);
+	if(i)
+		wsendctlmesg(w, Reshaped, i->r, i);
+}
+
 
 void
 resize(void)
