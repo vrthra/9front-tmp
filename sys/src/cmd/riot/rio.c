@@ -20,6 +20,7 @@
  * company at 1‑800‑543‑3002.
  */
 
+void		entile(void);
 void		resize(void);
 void		move(void);
 void		delete(void);
