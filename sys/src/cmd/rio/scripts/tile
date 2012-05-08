@@ -1,0 +1,78 @@
+#!/bin/rc
+
+fn winpos {
+      dd -obs 1 -ibs 1 -count 60 -quiet 1 |
+      awk '{print $2,$3,$4,$5}'
+}
+fn winsize {
+   winpos | awk '{print ($3-$1),($4-$2)}'
+}
+fn screen {
+   cat /mnt/wsys/screen | winsize
+}
+fn getwidth {
+  w=`{cat /mnt/wsys/window | winsize}
+  echo $w(1)
+}
+fn movcmd {
+  echo (echo move -minx $2 -miny $3 '>'  $1/wctl)
+  echo (echo resize -dx $4 -dy $5 '>' $1/wctl)
+}
+fn savewin {
+  windows=/dev/wsys/*
+  for (i in $windows) {
+     loc=`{cat $i/window | winpos}
+     echo (echo move -r $loc '>' $i/wctl)
+  }
+}
+fn tall {
+  maxx=$1
+  maxy=$2
+  mywin=$3
+  windows=/dev/wsys/*
+  childht=`{echo $maxy $#windows 1 - / p| dc}
+  ylast=0
+  xhalf=`{getwidth}
+  halfx=`{echo $maxx $xhalf - p| dc}
+  for (i in $windows) {
+    switch ($i) {
+        case /dev/wsys/$mywin
+        {
+          movcmd $i 0 0 $xhalf $maxy 
+        }
+        case *
+        {
+          movcmd $i $xhalf $ylast $halfx $childht
+          ylast=`{echo $ylast $childht + p| dc}
+        }
+    }
+  }
+}
+fn rows {
+  maxx=$1
+  maxy=$2
+  windows=/dev/wsys/*
+  childht=`{echo $maxy $#windows / p| dc}
+  ylast=0
+  for (i in $windows) {
+    movcmd $i 0 $ylast $maxx $childht
+    ylast=`{echo $ylast $childht + p| dc}
+  }
+}
+
+fn main {
+  myscreen=`{screen}
+  mywin=`{cat /mnt/wsys/winid}
+  switch ($1) {
+    case rows
+      rows $myscreen $mywin
+    case tall
+      tall $myscreen $mywin
+    case save
+      savewin
+    case *
+      echo (supported: tall rows save)
+  }
+  echo current > /dev/wsys/$mywin/wctl
+}
+main $*
